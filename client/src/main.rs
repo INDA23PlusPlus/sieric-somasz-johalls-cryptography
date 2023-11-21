@@ -1,35 +1,8 @@
-use libhej::{Get, MessageType, Put};
-use std::io::prelude::*;
-use std::io::stdin;
-use std::net::TcpStream;
-
-fn main() {
-    let mut addr = String::new();
-    println!("Type the adress of the server: ");
-    stdin().read_line(&mut addr).unwrap();
-
-    let data: MessageType = MessageType::Put(Put {
-        id: String::from("123"),
-        data: String::from("hej grabs"),
-    });
-    send_data(addr, data);
-}
-
-fn send_data(addr: String, data: MessageType) -> std::io::Result<()> {
-    let mut stream = TcpStream::connect(addr)?;
-    match &data {
-        MessageType::Get(_) => panic!("Wrong MessageType"),
-        MessageType::Put(_) => {
-            serde_json::to_writer(&stream, &data);
-            Ok(())
-        }
-    }
-}
-
-
 use anyhow::Result;
 use libhej;
 use ring::digest;
+use std::io::prelude::*;
+use std::io::stdin;
 use std::io::*;
 
 struct User {
@@ -56,8 +29,6 @@ struct File {
     obf_file_name: ObfuscatedFileName,
     last_hash: String,
 }
-
-
 
 fn main() -> Result<()> {
     let mut buffer = String::new();
@@ -88,8 +59,14 @@ fn main() -> Result<()> {
                     Err(e1) => match std::fs::File::create(parts[1]) {
                         Ok(v) => v,
                         Err(e2) => {
-                            eprintln!("error opening file: '{:?}' tried to open '{}'", e1, parts[1]);
-                            eprintln!("error creating file: '{:?}' tried to creat '{}'", e2, parts[1]);
+                            eprintln!(
+                                "error opening file: '{:?}' tried to open '{}'",
+                                e1, parts[1]
+                            );
+                            eprintln!(
+                                "error creating file: '{:?}' tried to creat '{}'",
+                                e2, parts[1]
+                            );
                             continue;
                         }
                     },
