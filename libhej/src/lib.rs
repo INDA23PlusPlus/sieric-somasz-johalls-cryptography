@@ -1,14 +1,27 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Get {
+    Id(String),
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Put {
+    Id(String),
+    Data(String),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn test_serial() {
+        let s = String::from("HEllo");
+        let get = Get::Id(s);
+        let serialied = serde_yaml::to_string(&get).unwrap();
+        let deserialized: Get = serde_yaml::from_str(&serialied).unwrap();
+        println!("{:?}", serialied);
+        println!("{:?}", deserialized);
+
+        assert!(true);
     }
 }
