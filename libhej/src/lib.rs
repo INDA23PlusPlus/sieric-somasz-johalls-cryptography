@@ -9,6 +9,8 @@ pub struct Put {
     pub id: String,
     pub data: String,
 }
+#[derive(Serialize, Deserialize, Debug)]
+
 pub enum MessageType {
     Put(Put),
     Get(Get),
@@ -20,7 +22,7 @@ mod tests {
     #[test]
     fn test_serial() {
         let s = String::from("HEllo");
-        let get = Get::Id(s);
+        let get = Get { id: s };
         let serialied = serde_yaml::to_string(&get).unwrap();
         let deserialized: Get = serde_yaml::from_str(&serialied).unwrap();
         println!("{:?}", serialied);
