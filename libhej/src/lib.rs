@@ -1,13 +1,17 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum Get {
-    Id(String),
+pub struct Get {
+    id: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
-pub enum Put {
-    Id(String),
-    Data(String),
+pub struct Put {
+    id: String,
+    data: String,
+}
+pub enum MessageType {
+    Put(Put),
+    Get(Get),
 }
 
 #[cfg(test)]
