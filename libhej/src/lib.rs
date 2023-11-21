@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Get {
-    id: String,
+    pub id: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Put {
-    id: String,
-    data: String,
+    pub id: String,
+    pub data: String,
 }
 pub enum MessageType {
     Put(Put),
