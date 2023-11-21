@@ -10,7 +10,6 @@ pub struct Put {
     pub data: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
-
 pub enum MessageType {
     Put(Put),
     Get(Get),
