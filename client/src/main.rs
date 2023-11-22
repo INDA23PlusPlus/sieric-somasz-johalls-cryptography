@@ -3,7 +3,6 @@ use libhej;
 use ring::digest;
 use std::io::prelude::*;
 use std::io::stdin;
-use std::io::*;
 
 struct User {
     username: String,
@@ -11,22 +10,23 @@ struct User {
 }
 
 struct ObfuscatedFileName {
-    name: [u8; 32],
+    name: String,
 }
 
-impl Default for ObfuscatedFileName {
-    fn default() -> Self {
+impl From<(User, String)> for ObfuscatedFileName {
+    fn from(inp: (User, String)) -> Self {
+        let (user, file_name) = inp;
+        let mut data = file_name;
+        data.push_str(&user.username);
+        data.push_str(&user.password);
         ObfuscatedFileName {
-            name: ring::rand::generate::<[u8; 32]>(&ring::rand::SystemRandom::new())
-                .unwrap()
-                .expose(),
+            name: format!("{:?}", digest::digest(&digest::SHA512, data.as_bytes())).chars().skip(7).collect(),
         }
     }
 }
 
 struct File {
     file_name: String,
-    obf_file_name: ObfuscatedFileName,
     last_hash: String,
 }
 
@@ -54,36 +54,16 @@ fn main() -> Result<()> {
 
         match parts[0] {
             "get" => {
-                let mut file = match std::fs::File::open(parts[1]) {
-                    Ok(v) => v,
-                    Err(e1) => match std::fs::File::create(parts[1]) {
-                        Ok(v) => v,
-                        Err(e2) => {
-                            eprintln!(
-                                "error opening file: '{:?}' tried to open '{}'",
-                                e1, parts[1]
-                            );
-                            eprintln!(
-                                "error creating file: '{:?}' tried to creat '{}'",
-                                e2, parts[1]
-                            );
-                            continue;
-                        }
-                    },
-                };
-
-                file.write_all()
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .open(parts[1])?;
+                file.write_all(b"From server")?;
             }
             "put" => {
-                let mut file = match std::fs::File::open(parts[1]) {
-                    Err(e) => {
-                        eprintln!("error opening file: '{:?}' tried to open '{}'", e, parts[1]);
-                        continue;
-                    }
-                    Ok(v) => v,
-                };
+                let mut file = std::fs::File::open(parts[1])?;
                 buffer.clear();
-                file.read_to_string(&mut buffer);
+                file.read_to_string(&mut buffer)?;
 
                 eprintln!("simulating sending to server: '{}'", buffer);
             }
