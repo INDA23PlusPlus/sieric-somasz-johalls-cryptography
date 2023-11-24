@@ -1,3 +1,5 @@
+mod tcp;
+
 use anyhow::Result;
 use base64::Engine;
 use libhej;
@@ -13,7 +15,11 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::stdin;
 use std::io::stdout;
+use std::net::TcpStream;
 use std::num::NonZeroU32;
+
+use crate::tcp::get_from_server;
+use crate::tcp::send_to_server;
 
 #[derive(Clone)]
 struct User {
@@ -210,6 +216,20 @@ fn main() -> Result<()> {
         user.username, user.password
     );
 
+    //This does not work on Windows.
+
+    //L
+
+    print!("Write the IP of the server: ");
+    stdout().flush().unwrap();
+    stdin().read_line(&mut buffer)?;
+    let addr = buffer.trim().to_owned().clone();
+
+    //Uncommment the line below if you are on Windows
+    // let addr = "127.0.0.1:31337";
+
+    let stream = TcpStream::connect(addr)?;
+
     loop {
         buffer.clear();
         stdin().read_line(&mut buffer)?;
@@ -238,16 +258,26 @@ fn main() -> Result<()> {
                     .open(parts[1])?;
 
                 // TODO: get from server
-                let from_server = EncryptedFile::encrypt(
-                    &User {
-                        username: "jonathan".to_owned(),
-                        password: "hallstrom".to_owned(),
+                let obf_name = ObfuscatedFileName::from((&user, parts[1]));
+
+                let data = match get_from_server(&stream, &obf_name.obf_name) {
+                    Ok(response) => match response.data {
+                        Some(data) => data,
+                        None => {
+                            println!("No file at file ID: {}", parts[1]);
+                            continue;
+                        }
                     },
-                    parts[1],
-                    "From server!",
-                )
-                .unwrap();
-                eprintln!("simulating getting from server: '{}'", from_server.contents);
+                    Err(_) => {
+                        println!("Couldn't get file at ID {}", parts[1]);
+                        continue;
+                    }
+                };
+                let from_server = EncryptedFile {
+                    name: obf_name,
+                    contents: data,
+                };
+
                 let decrypted = match from_server.decrypt(&user) {
                     Ok(file) => file,
                     Err(_) => {
@@ -279,10 +309,14 @@ fn main() -> Result<()> {
                 let encrypted = EncryptedFile::encrypt(&user, parts[1], &buffer).unwrap();
 
                 // TODO: send `encrypted` to server
-                eprintln!(
-                    "Simulating sending to server: '{} {}'",
-                    encrypted.name.obf_name, encrypted.contents
-                );
+                match send_to_server(&stream, &encrypted.name.obf_name, &encrypted.contents) {
+                    Ok(_) => {
+                        println!("File sent succesfully!");
+                    }
+                    Err(_) => {
+                        println!("File transfer unsuccesfull")
+                    }
+                }
 
                 // store hashes to disk
                 store_files(&files)?;
