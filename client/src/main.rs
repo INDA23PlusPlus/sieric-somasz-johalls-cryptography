@@ -2,7 +2,6 @@ mod tcp;
 
 use anyhow::Result;
 use base64::Engine;
-use libhej;
 use ring::aead::Aad;
 use ring::aead::BoundKey;
 use ring::aead::Nonce;
@@ -216,19 +215,13 @@ fn main() -> Result<()> {
         user.username, user.password
     );
 
-    //This does not work on Windows.
-
-    //L
-
     print!("Write the IP of the server: ");
     stdout().flush().unwrap();
+    buffer.clear();
     stdin().read_line(&mut buffer)?;
     let addr = buffer.trim().to_owned().clone();
 
-    //Uncommment the line below if you are on Windows
-    // let addr = "127.0.0.1:31337";
-
-    let stream = TcpStream::connect(addr)?;
+    let stream = TcpStream::connect(format!("{}:31337", addr))?;
 
     loop {
         buffer.clear();

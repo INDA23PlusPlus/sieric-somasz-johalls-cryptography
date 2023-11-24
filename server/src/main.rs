@@ -1,5 +1,5 @@
-use std::{collections::HashMap, net::TcpListener, io::Read};
-use libhej::{self, MessageType, GetResponse};
+use std::{collections::HashMap, net::TcpListener};
+use libhej::{MessageType, GetResponse};
 use serde::de::Deserialize;
 
 struct State {
